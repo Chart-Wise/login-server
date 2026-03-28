@@ -7,21 +7,16 @@ import jakarta.servlet.FilterChain;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.NonNull;
-import org.springframework.http.HttpHeaders;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.web.authentication.WebAuthenticationDetailsSource;
 import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
-
 import java.util.Optional;
 import java.util.Set;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
+import static java.util.Arrays.stream;
 
 @Component
 public class JwtAuthenticationFilter extends OncePerRequestFilter {
-
-    private static final Pattern BEARER_PATTERN = Pattern.compile("^Bearer (.+?)$");
 
     private final JwtPlugin jwtPlugin;
 
@@ -31,7 +26,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
     @Override
     protected void doFilterInternal(@NonNull HttpServletRequest request, @NonNull HttpServletResponse response, @NonNull FilterChain filterChain) {
-        String jwt = getBearerToken(request);
+        String jwt = getJwtFromCookie(request);
 
         if (jwt != null) {
             Optional<Jws<Claims>> jwtClaims = jwtPlugin.validateToken(jwt);
@@ -63,14 +58,13 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         }
     }
 
-    private String getBearerToken(HttpServletRequest request) {
-        String headerValue = request.getHeader(HttpHeaders.AUTHORIZATION);
-        if (headerValue != null) {
-            Matcher matcher = BEARER_PATTERN.matcher(headerValue);
-            if (matcher.find()) {
-                return matcher.group(1);
-            }
-        }
-        return null;
+    private String getJwtFromCookie(HttpServletRequest request) {
+        if (request.getCookies() == null) return null;
+
+        return stream(request.getCookies())
+                .filter(cookie -> "accessToken".equals(cookie.getName())) // 쿠키 이름이 accessToken인 것 찾기
+                .map(jakarta.servlet.http.Cookie::getValue)
+                .findFirst()
+                .orElse(null);
     }
 }
