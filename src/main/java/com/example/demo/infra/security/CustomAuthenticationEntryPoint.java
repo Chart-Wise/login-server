@@ -23,13 +23,11 @@ public class CustomAuthenticationEntryPoint implements AuthenticationEntryPoint 
         response.setCharacterEncoding("UTF-8");
 
         // 오류 메시지 작성
-        ErrorResponse errorResponse =  ErrorResponse.from("JWT Verification failed");
+        String message = authException.getMessage();
 
-        // JSON 형식으로 오류 메시지 출력
+        ErrorResponse errorResponse = ErrorResponse.from(message);
+
         ObjectMapper objectMapper = new ObjectMapper();
-        String jsonResponse = objectMapper.writeValueAsString(errorResponse);
-
-        // 응답으로 JSON 오류 메시지 전송
-        response.getWriter().write(jsonResponse);
+        response.getWriter().write(objectMapper.writeValueAsString(errorResponse));
     }
 }

@@ -21,4 +21,10 @@ public class GlobalExceptionHandler {
         ErrorResponse errorResponse = ErrorResponse.from(errorMessages.isEmpty() ? "유효성 검사 오류가 발생했습니다." : errorMessages);
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(errorResponse);
     }
+
+    @ExceptionHandler(IllegalArgumentException.class)
+    public ResponseEntity<ErrorResponse> handleIllegalArgumentException(IllegalArgumentException e) {
+        ErrorResponse error = ErrorResponse.from(e.getMessage());
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(error);
+    }
 }
